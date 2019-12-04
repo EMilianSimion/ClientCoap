@@ -1,0 +1,16 @@
+Code : 0.0	(Empty message)
+	Empty
+
+Code : 0.1  (/GET )
+    Score
+    RedCards
+    YellowCars
+    Corners
+    Offsides
+
+
+Code : 0.2    (/Post)
+       Match:Name
+
+Code : 0.3 (Custom C/F trigger)
+	Empty
