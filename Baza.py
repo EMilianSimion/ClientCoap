@@ -1,5 +1,5 @@
-from format import Format
-from message import Message
+from format import Header
+from message import Pack
 
 CON = 0
 """Confirmable message type."""

@@ -1,23 +1,26 @@
-class Message:
+class Pack:
     def __init__(self):
-        self.format=""
-        self.message=""
-        self.package=""
+        self.header = ""
+        self.message = ""
+        self.package = ""
 
-    def buildMessage(self,format,message):
-        self.format=format
-        self.message=message
-        if(message==""):
-            self.package=self.format.encode()
+    def set(self, pack):
+        self.package = pack
+
+    def buildPack(self,header,message):
+        self.header = header
+        self.message = message
+        if(message == ""):
+            self.package=("" + str(self.header)).encode()
         else:
-            self.package=(""+str(self.format)+str(self.message)).encode()
+            self.package = (""+str(self.header.header)+str(self.message)).encode()
         return self.package
-    def dispackMessage(self):
+    def dispackPack(self):
         dispack=self.package.decode()
         tokenLength=int(str(dispack[4:8]),2)
-        self.format=dispack[0:32+tokenLength*8]
+        self.header=dispack[0:32+tokenLength*8]
         self.message=dispack[32+tokenLength*8:]
-        return(self.format,self.message)
+        return(self.header,self.message)
 
     def getPackege(self):
         return self.package
