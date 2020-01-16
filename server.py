@@ -14,11 +14,22 @@ headerRecv = Header()
 headerSend = Header()
 packRecv = Pack()
 packSend = Pack()
-headerSend.setHeader1(1,1,4)
+headerSend.setHeader1(1,0,4)
 headerSend.setCode(0,1)
 headerSend.setMessageId(29)
 headerSend.setToken(68)
 headerSend.buildHeader()
+
+
+#make an empty message
+emptyM = Header()
+emptyP = Pack()
+emptyM.setHeader1(1,2,4)
+emptyM.setCode(0,0)
+emptyM.setMessageId(30)
+emptyM.setToken(70)
+emptyM.buildHeader()
+emptyP.buildPack(emptyM,"gool")
 
 dataSent=""
 
@@ -34,18 +45,24 @@ while 1:
     headerRecv.setHeader(head)
     headerRecv.buildHeader()
     headerRecv.setCode(headerRecv.getCodeClass(), headerRecv.getCodeDetail())
-    if headerRecv.getCode() !=0:
+    if headerRecv.getCode() !=0 :
 
         print("received",len(data), "bytes from ", addr)
         print("data de la client ", mesg )
-        if mesg == "Score":
+        if mesg == "SCORE":
             dataSent = "2-0"
-        if mesg == "Red":
+        if mesg == "RedCards":
             dataSent = "3REdCards"
-        if mesg == "Yellow":
+        if mesg == "YellowCars":
             dataSent = "8Yellow Cards"
+        if mesg == "Corners":
+            dataSent = "9Corners"
+        if mesg =="Offsides":
+            dataSent = "0Offisides"
 
         packSend.buildPack(headerSend, dataSent)
+       # sock.sendto(emptyP.getPackege(), addr)
+        headerSend.print()
         sock.sendto(packSend.getPackege(), addr)
         #sock.sendto(packSend.getPackege(), addr)
     else:

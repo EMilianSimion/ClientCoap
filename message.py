@@ -17,7 +17,8 @@ class Pack:
         return self.package
     def dispackPack(self):
         dispack=self.package.decode()
-        tokenLength=int(str(dispack[4:8]),2)
+        # tokenLength=int(str(dispack[4:8]),2)
+        tokenLength = 4
         self.header=dispack[0:32+tokenLength*8]
         self.message=dispack[32+tokenLength*8:]
         return(self.header,self.message)

@@ -3,6 +3,7 @@ import select
 from format import *
 from message import Pack
 from random import randint
+import threading
 
 _COAP_DEFAULT_PORT = 5006
 _COAP_DEFAULT_VERSION = 2
@@ -21,6 +22,7 @@ class Caop:
         self.callbacks = {}
         self.responseCallback = None
         self.port = 0
+        self.result = ""
 
     def start(self, addr='127.0.0.1', port=_COAP_DEFAULT_PORT):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,7 +42,7 @@ class Caop:
             status = self.sock.sendto(coapPacket.getPackege(), sockaddr)
             if (status > 0):
                 status = header.getMessageId()
-            print('Packet sent. MessageId', status)
+            # print('Packet sent. MessageId', status)
         except Exception as e:
             status = 0
             print('Exception while sending packet...')
@@ -49,6 +51,7 @@ class Caop:
     def send(self, ip, port, version, type, tkl, method, token, payload):
         header = Header()
         header.setHeader1(version, type, tkl)
+        token = randint(0, 65536)
         header.setToken(token)
         header.setCode(0, method)
 
@@ -76,13 +79,20 @@ class Caop:
         except Exception:
             return None, None
 
-    def get(self, ip, port, url):
-        return self.send(ip, port, _COAP_DEFAULT_VERSION, COAP_TYPE.COAP_CON, 4, COAP_METHOD.COAP_GET, 0, url)
+    def get(self, ip, port, url, type):
+        return threading.Thread(target = self.send(ip, port, _COAP_DEFAULT_VERSION, type, 4, COAP_METHOD.COAP_GET, 0, url)).start()
+    def post(self, ip, port, url,type ):
+        return threading.Thread(target = self.send(ip, port, _COAP_DEFAULT_VERSION,type, 4, COAP_METHOD.COAP_POST, 0, url )).start()
+    def custom(self, ip, port, url, type):
+        return threading.Thread(target = self.send(ip, port, _COAP_DEFAULT_VERSION, type, 4, COAP_METHOD.COAP_CUSTOM, 0, url)).start()
 
     def handleIncommingResponse(self, header, message):
 
         #header.print()
-        print("Mesajul este "+ str(message))
+        self.result ="Mesajul este "+ str(message)
+        print("Mesajul receptionat de la server "+ str(message))
+    def getResult(self):
+        return self.result
 
     def sendACK(self, ip, port, messID, token):
         header = Header()
@@ -113,7 +123,6 @@ class Caop:
                     print("Am trimis de " + str(_COAP_DEFAULT_MAX_RETRANSMIT) + " ori. Nu am primit nici un raspuns")
 
             else:
-                print("---------------------------------------" + str(r))
                 # Recieve ACK
                 headerRcv = Header()
                 buffer = Pack()
@@ -125,14 +134,20 @@ class Caop:
                 headerRcv.buildHeader()
                 headerRcv.setCode(headerRcv.getCodeClass(), headerRcv.getCodeDetail())
             # piggy-backed?
-            print("-----------------------------getCode--------------" + str(headerRcv.getCode()))
+            # print("--------------piggy-backed---------------getCode--------------" + str(headerRcv.getCode()))
 
             if headerRcv.getCode() != 0:   #header.getCode() == Content
                 # piggybacked
-                if headerRcv.getMessageId() == header.getMessageId()  and headerRcv.getToken() == header.getToken():
-                    return self.handleIncommingResponse(headerRcv, message)
-                else:
-                    print("Piggy-backed not match")
+                # if headerRcv.getCodeClass() == 4 and headerRcv.getCodeDetail()==5: #COAP_METHOD_NOT_ALLOWD
+                    # print("COAP_METHOD_NOT_ALLOWD")
+                    # return
+                # elif headerRcv.getCodeClass() == 2 and (headerRcv.getCodeDetail()==3 or headerRcv.getCodeDetail() == 5):
+
+                # -----------------------------?
+                #if headerRcv.getMessageId() == header.getMessageId()  and headerRcv.getToken() == header.getToken():
+                return self.handleIncommingResponse(headerRcv, message)
+                # else:
+                #     print("Piggy-backed not match")
             else:
                 # No piggybacked
                 ######
@@ -140,7 +155,6 @@ class Caop:
                 if not r:
                     print("Nu s a receptionat un raspuns ")
                 else:
-                    print("---------------------------------------"+str(r))
                     print("empty message recv. Message sent has token :" + str(header.getToken()) )
                     headerRcv = Header()
                     pack = Pack()
@@ -158,12 +172,13 @@ class Caop:
                         print("---------------------------------" + str(headerRcv.getMessageId()))
                         self.sendACK(ip, port, headerRcv.getMessageId(), headerRcv.getToken())
                     # ReturnResponse
-                    if headerRcv.getToken() == header.getToken():
-                        return self.handleIncommingResponse(headerRcv, message)
-                    else:
-                        print("Separate response not match")
+                    # ------------------------?
+                    # if headerRcv.getToken() == header.getToken():
+                    return self.handleIncommingResponse(headerRcv, message)
+                    # else:
+                    #     print("Separate response not match")
                 #######
-        else:
+        else:       
             # NON
             self.sendPacket(ip, port, header, message)
             # self.sock.settimeout(_COAP)
@@ -181,14 +196,15 @@ class Caop:
                 headerRcv.buildHeader()
                 # RespType?
                 # RespCON
-                print("-------------------" + str(headerRcv.getMessageType()))
+                # print("-------------------" + str(headerRcv.getMessageType()))
                 if header.getMessageType() == COAP_TYPE.COAP_CON:
                     # trasnmitACK
                     self.sendACK(ip, port, headerRcv.getMessageId(), headerRcv.getToken())
                     print("---------------------->", str(headerRcv.getMessageId()) + str(headerRcv.getToken()))
                 # ReturnResponse
-                if headerRcv.getToken() == header.getToken():
-                    return self.handleIncommingResponse(headerRcv, message)
-                else:
-                    print("Nonconf message not match")
+                # --------------------?
+                # if headerRcv.getToken() == header.getToken():
+                return self.handleIncommingResponse(headerRcv, message)
+                # else:
+                #     print("Nonconf message not match")
 
