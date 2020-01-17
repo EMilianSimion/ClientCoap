@@ -6,8 +6,8 @@ def CoapResponseCode(class_, detail):
     return ((class_ << 5) | (detail))
 
 COAP_TYPE = enum(
-    COAP_CON=0,
-    COAP_NONCON=1,
+    COAP_CON=1,
+    COAP_NONCON=0,
     COAP_ACK=2,
     COAP_RESET=3
 )

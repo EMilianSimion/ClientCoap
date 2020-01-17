@@ -28,11 +28,11 @@ def run(my_host, my_port, my_cerere, my_metoda, my_type):
         coap.get(ip, port, "Score", COAP_TYPE.COAP_NONCON)
     else:
         if my_metoda =="Get":
-            coap.get(ip, port, str(my_cerere), type)#str(cerere)
+            coap.get(my_host, my_port, str(my_cerere), my_type)#str(cerere)
         elif my_metoda =="POST":
-            coap.post(ip, port, str(my_cerere), type)
+            coap.post(my_host, my_port, str(my_cerere), my_type)
         elif my_metoda == "CUSTOM":
-            coap.custom(ip, port, str(my_cerere), type)
+            coap.custom(my_host, my_port, str(my_cerere), my_type)
 
     text = coap.getResult()
 if __name__ == '__main__':

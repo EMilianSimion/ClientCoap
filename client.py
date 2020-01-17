@@ -103,10 +103,40 @@ class Caop:
         header.buildHeader()
         self.sendPacket(ip, port, header, "")
 
+    def codeGet(self,header):
+        if header.getCodeClass() ==2 and header.getCodeDetail() ==3:
+            print("COAP_VALID")
+            return 1
+        elif header.getCodeClass() ==2 and header.getCodeDetail() ==5:
+            print("COAP_CONTENT")
+            return 1
+        elif header.getCodeClass() ==4 and header.getCodeDetail() ==5:
+            print ("COAP_METHOD_NOT_ALLOWD")
+        return 0
+
+    def codeput(self, header):
+        if header.getCodeClass() == 2 and header.getCodeDetail() == 1:
+            print("COAP_CREATED")
+            return 1
+        if header.getCodeClass() == 2 and header.getCodeDetail() == 4:
+            print("COAP_CHANGED")
+            return 1
+        if header.getCodeClass() == 4 and header.getCodeDetail() == 5:
+            print("COAP_METHOD_NOT_ALLOWD")
+        return 0
+
+    def verifyCodeRcv(self, headerSent, headerRecv):
+        if headerSent.getCode() == COAP_METHOD.COAP_GET :
+            return self.codeGet(headerRecv)
+        elif headerSent.getCode() == COAP_METHOD.COAP_POST:
+            return self.codeput(headerSent)
+
+
     def loop(self, ip, port, header, message, retransmit):
         global headerRcv
         if header.getMessageType() == COAP_TYPE.COAP_CON:
             # CON
+            print("Trimit CON")
             self.sendPacket(ip, port, header, message)
 
             # self.sock.settimeout(_COAP_DEFAULT_AKC_TIMEOUT)
@@ -138,10 +168,9 @@ class Caop:
 
             if headerRcv.getCode() != 0:   #header.getCode() == Content
                 # piggybacked
-                # if headerRcv.getCodeClass() == 4 and headerRcv.getCodeDetail()==5: #COAP_METHOD_NOT_ALLOWD
-                    # print("COAP_METHOD_NOT_ALLOWD")
-                    # return
-                # elif headerRcv.getCodeClass() == 2 and (headerRcv.getCodeDetail()==3 or headerRcv.getCodeDetail() == 5):
+                if self.verifyCodeRcv(header, headerRcv) ==0:
+                    print("aici iesi")
+                    return
 
                 # -----------------------------?
                 #if headerRcv.getMessageId() == header.getMessageId()  and headerRcv.getToken() == header.getToken():
@@ -180,6 +209,7 @@ class Caop:
                 #######
         else:       
             # NON
+            print("Trimit NONCON")
             self.sendPacket(ip, port, header, message)
             # self.sock.settimeout(_COAP)
             # WaitForResp
@@ -196,8 +226,10 @@ class Caop:
                 headerRcv.buildHeader()
                 # RespType?
                 # RespCON
-                # print("-------------------" + str(headerRcv.getMessageType()))
-                if header.getMessageType() == COAP_TYPE.COAP_CON:
+                if self.verifyCodeRcv(header, headerRcv) ==0:
+                    print("aici iesi")
+                    return
+                if headerRcv.getMessageType() == COAP_TYPE.COAP_CON:
                     # trasnmitACK
                     self.sendACK(ip, port, headerRcv.getMessageId(), headerRcv.getToken())
                     print("---------------------->", str(headerRcv.getMessageId()) + str(headerRcv.getToken()))
